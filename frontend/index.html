@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heart Disease Risk Check</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <main class="shell">
+    <section class="headline card">
+      <p class="kicker">Clinical Screening Interface</p>
+      <h1>Heart Disease Prediction Frontend</h1>
+      <p class="subtext">
+        Enter patient attributes to estimate disease risk using your trained ML pipeline.
+      </p>
+    </section>
+
+    <section class="form-wrap card">
+      <form id="prediction-form" class="grid" novalidate>
+        <label>Age
+          <input type="number" id="age" min="1" max="120" value="55" required />
+        </label>
+
+        <label>Sex
+          <select id="sex" required>
+            <option value="1">Male</option>
+            <option value="0">Female</option>
+          </select>
+        </label>
+
+        <label>Chest Pain Type (cp)
+          <select id="cp" required>
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </label>
+
+        <label>Resting BP (trestbps)
+          <input type="number" id="trestbps" value="130" required />
+        </label>
+
+        <label>Cholesterol (chol)
+          <input type="number" id="chol" value="250" required />
+        </label>
+
+        <label>Fasting Blood Sugar &gt;120 (fbs)
+          <select id="fbs" required>
+            <option value="0" selected>No</option>
+            <option value="1">Yes</option>
+          </select>
+        </label>
+
+        <label>Rest ECG (restecg)
+          <select id="restecg" required>
+            <option value="0" selected>0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+        </label>
+
+        <label>Max Heart Rate (thalach)
+          <input type="number" id="thalach" value="150" required />
+        </label>
+
+        <label>Exercise Angina (exang)
+          <select id="exang" required>
+            <option value="0" selected>No</option>
+            <option value="1">Yes</option>
+          </select>
+        </label>
+
+        <label>Oldpeak
+          <input type="number" step="0.1" id="oldpeak" value="1.0" required />
+        </label>
+
+        <label>Slope
+          <select id="slope" required>
+            <option value="0">0</option>
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+          </select>
+        </label>
+
+        <label>Number of Vessels (ca)
+          <select id="ca" required>
+            <option value="0" selected>0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </label>
+
+        <label>Thal
+          <select id="thal" required>
+            <option value="3" selected>3 (normal)</option>
+            <option value="6">6 (fixed defect)</option>
+            <option value="7">7 (reversible defect)</option>
+          </select>
+        </label>
+
+        <div class="controls">
+          <button id="predict-btn" type="submit">Predict Risk</button>
+          <small>API endpoint: <code id="api-url">http://127.0.0.1:8000/predict</code></small>
+        </div>
+      </form>
+    </section>
+
+    <section class="result card" id="result-panel" aria-live="polite">
+      <h2>Prediction Output</h2>
+      <p class="muted">Submit the form to see prediction and probability.</p>
+      <div id="result-content"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -7,3 +7,13 @@ __pycache__/
 models/*.joblib
 *.log
 .DS_Store
+# Secrets
+kaggle.json
+
+# Virtual Environments
+.venv/
+
+# Experiments & Data
+data/
+experiments/**/models/*.joblib
+

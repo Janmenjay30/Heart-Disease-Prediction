@@ -1,0 +1,127 @@
+{
+  "dataset": "sulianova/cardiovascular-disease-dataset",
+  "dataset_shape": [
+    68596,
+    15
+  ],
+  "target_distribution": {
+    "0": 34658,
+    "1": 33938
+  },
+  "selection_metric": "f1",
+  "best_model": "XGBoost",
+  "metrics": {
+    "LogisticRegression": {
+      "accuracy": 0.7181486880466472,
+      "precision": 0.7432950191570882,
+      "recall": 0.6573364761343548,
+      "f1": 0.6976780548823391,
+      "roc_auc": 0.7843644898281172,
+      "confusion_matrix": [
+        [
+          5391,
+          1541
+        ],
+        [
+          2326,
+          4462
+        ]
+      ]
+    },
+    "KNN": {
+      "accuracy": 0.7180029154518951,
+      "precision": 0.7291568535091851,
+      "recall": 0.6841484973482617,
+      "f1": 0.705936003648248,
+      "roc_auc": 0.7786609125060653,
+      "confusion_matrix": [
+        [
+          5207,
+          1725
+        ],
+        [
+          2144,
+          4644
+        ]
+      ]
+    },
+    "MLP": {
+      "accuracy": 0.7257288629737609,
+      "precision": 0.7346052427485652,
+      "recall": 0.6977018267530937,
+      "f1": 0.7156781261805817,
+      "roc_auc": 0.7935002742356849,
+      "confusion_matrix": [
+        [
+          5221,
+          1711
+        ],
+        [
+          2052,
+          4736
+        ]
+      ]
+    },
+    "SVC": {
+      "accuracy": 0.5908892128279883,
+      "precision": 0.5529899882745558,
+      "recall": 0.9032115497937537,
+      "f1": 0.685986013986014,
+      "roc_auc": 0.7408681047066867,
+      "confusion_matrix": [
+        [
+          1976,
+          4956
+        ],
+        [
+          657,
+          6131
+        ]
+      ]
+    },
+    "RandomForest": {
+      "accuracy": 0.7274781341107872,
+      "precision": 0.7466429380359165,
+      "recall": 0.679876252209782,
+      "f1": 0.7116971239108643,
+      "roc_auc": 0.7929709190312765,
+      "confusion_matrix": [
+        [
+          5366,
+          1566
+        ],
+        [
+          2173,
+          4615
+        ]
+      ]
+    },
+    "XGBoost": {
+      "accuracy": 0.7159620991253645,
+      "precision": 0.6828126976097129,
+      "recall": 0.7953741897466117,
+      "f1": 0.7348077577407282,
+      "roc_auc": 0.7964713131281875,
+      "confusion_matrix": [
+        [
+          4424,
+          2508
+        ],
+        [
+          1389,
+          5399
+        ]
+      ]
+    }
+  },
+  "threshold_tuning": {
+    "XGBoost": {
+      "threshold": 0.38,
+      "train_f1_at_threshold": 0.7465117467672965
+    }
+  },
+  "artifacts": {
+    "models_dir": "D:\\E Drive\\programming\\Heart_disease_prediction\\Projectprototype\\experiments\\cardio_kaggle\\models",
+    "results_dir": "D:\\E Drive\\programming\\Heart_disease_prediction\\Projectprototype\\experiments\\cardio_kaggle\\results"
+  }
+}
