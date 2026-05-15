@@ -1,26 +1,60 @@
 # Heart Disease Prediction Project
 
-A comprehensive machine learning project for predicting heart disease using the UCI Heart Disease Dataset.
+A dual-pipeline machine learning project for predicting heart disease using two clinical datasets with five shared ML models.
+
+## Project Overview
+
+| | Pipeline 1: Cleveland | Pipeline 2: Framingham |
+|---|---|---|
+| **Goal** | Predict existing heart disease | Predict 10-year CHD risk |
+| **Dataset** | UCI Cleveland (303 rows) | Framingham Heart Study (~4,200 rows) |
+| **Target** | `target` (0/1) | `TenYearCHD` (0/1) |
+| **Class Balance** | ~54% / 46% (balanced) | ~85% / 15% (imbalanced) |
+
+**Shared across both pipelines:**
+- **Models:** Logistic Regression, KNN, SVC, Random Forest, XGBoost
+- **Metrics:** Accuracy, Precision, Recall, F1-Score, ROC-AUC
+- **Visualizations:** Accuracy bars, metrics comparison, confusion matrices, ROC curves
 
 ## Project Structure
 
 ```
 Projectprototype/
-├── data/                    # Dataset files
-├── models/                  # Saved trained models
-├── notebooks/              # Jupyter notebooks
-│   └── heart_disease_analysis.ipynb
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+├── src/                          # Source code
+│   ├── shared.py                 # Shared models, evaluation, plots
+│   ├── data_utils.py             # Dataset loaders (Cleveland + Framingham)
+│   ├── train.py                  # Pipeline 1 — Cleveland training
+│   ├── train_framingham.py       # Pipeline 2 — Framingham training
+│   └── evaluate_models.py        # Evaluation script (supports both)
+├── data/                         # Dataset files
+│   └── processed.cleveland.data  # Cleveland dataset
+├── results/
+│   ├── cleveland/                # Pipeline 1 outputs
+│   │   ├── models/               # Trained models
+│   │   ├── model_metrics.csv
+│   │   ├── evaluation_summary.json
+│   │   └── figures/              # Plots (accuracy, metrics, confusion, ROC)
+│   └── framingham/               # Pipeline 2 outputs
+│       ├── models/               # Trained models
+│       ├── model_metrics.csv
+│       ├── evaluation_summary.json
+│       └── figures/              # Plots (accuracy, metrics, confusion, ROC)
+├── notebooks/                    # Jupyter notebooks for EDA
+├── frontend/                     # HTML/CSS/JS web frontend
+├── api_fastapi.py                # FastAPI prediction API
+├── app_streamlit.py              # Streamlit web app
+├── ModelReport.md                # Detailed model analysis report
+├── requirements.txt              # Python dependencies
+└── README.md                     # This file
 ```
 
-## Setup Instructions
+## Setup
 
-### 1. Create Virtual Environment
+### 1. Create and Activate Virtual Environment
 
 ```powershell
-python -m venv venv
-.\venv\Scripts\Activate.ps1
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
 ### 2. Install Dependencies
@@ -29,107 +63,84 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-### 3. Run the Analysis
+### 3. Configure Kaggle Credentials (for Framingham dataset)
 
-```powershell
-jupyter notebook notebooks/heart_disease_analysis.ipynb
-```
+Copy your `kaggle.json` to `C:\Users\<YourUsername>\.kaggle\kaggle.json`. This is required for automatic download of the Framingham dataset.
 
-### 4. Train Models From Script
+## Running the Pipelines
 
+### Pipeline 1 — Cleveland Dataset
+
+Train the models:
 ```powershell
 python src/train.py
 ```
 
-This generates:
-- `models/best_pipeline.joblib`
-- `models/*_pipeline.joblib` (all trained model pipelines)
-- `models/metrics.json` (includes Recall, F1, Confusion Matrix, ROC-AUC, and imbalance analysis)
-
-### 4.1 Evaluate All Models + Generate Graphs
-
+Evaluate and generate plots:
 ```powershell
 python src/evaluate_models.py
 ```
 
-This generates paper-ready artifacts in `results/`:
-- `results/model_metrics.csv`
-- `results/evaluation_summary.json`
-- `results/figures/accuracy_comparison.png`
-- `results/figures/metrics_comparison.png`
-- `results/figures/confusion_matrices.png`
-- `results/figures/roc_curves.png` (when probability scores are available)
+Outputs:
+- Trained models → `results/cleveland/models/`
+- Metrics & plots → `results/cleveland/`
 
-### 4.2 Run Kaggle Cardio Dataset Experiment (Separate Folder)
+### Pipeline 2 — Framingham Dataset
 
+Train the models (downloads dataset automatically):
 ```powershell
-python src/run_cardio_kaggle_experiment.py
+python src/train_framingham.py
 ```
 
-This downloads `sulianova/cardiovascular-disease-dataset` and stores all artifacts in:
-- `experiments/cardio_kaggle/models/`
-- `experiments/cardio_kaggle/results/`
-
-Generated outputs include:
-- per-model pipelines + `best_pipeline.joblib`
-- `model_metrics.csv`
-- `evaluation_summary.json`
-- accuracy, metric, confusion matrix, and ROC plots under `results/figures/`
-
-### 5. Run Streamlit App
-
+Evaluate and generate plots:
 ```powershell
-streamlit run app_streamlit.py
+python src/evaluate_models.py --pipeline framingham
 ```
 
-### 6. Run FastAPI Inference API
+Outputs:
+- Trained models → `results/framingham/models/`
+- Metrics & plots → `results/framingham/`
+
+## Running the Web Applications
+
+### FastAPI Inference API
 
 ```powershell
 uvicorn api_fastapi:app --reload
 ```
 
-Endpoints:
-- `GET /health`
-- `POST /predict`
+- Health check: http://127.0.0.1:8000/health
+- Predict endpoint: `POST http://127.0.0.1:8000/predict`
+- Swagger docs: http://127.0.0.1:8000/docs
 
-### 7. Run Web Frontend (HTML/CSS/JS)
+### Streamlit App
 
-From project root, serve the `frontend` folder in a separate terminal:
+```powershell
+streamlit run app_streamlit.py
+```
+
+Opens at http://localhost:8501
+
+### HTML Frontend
 
 ```powershell
 python -m http.server 5500 --directory frontend
 ```
 
-Then open:
-- `http://127.0.0.1:5500`
-
-Make sure FastAPI is already running at `http://127.0.0.1:8000`.
-
-## Dataset
-
-- **Source:** UCI Machine Learning Repository
-- **File:** `processed.cleveland.data`
-- **Features:** 13 clinical features + 1 target variable
-- **Target:** Binary classification (presence/absence of heart disease)
+Opens at http://127.0.0.1:5500 (requires FastAPI running on port 8000)
 
 ## Models Trained
 
-1. **Logistic Regression** (Baseline)
-2. **K-Nearest Neighbors**
-3. **Support Vector Machine**
-4. **Random Forest**
-5. **XGBoost** (if installed)
+1. **Logistic Regression** — Linear baseline, highly interpretable
+2. **K-Nearest Neighbors** — Non-parametric, instance-based
+3. **Support Vector Classifier** — Finds optimal decision boundary
+4. **Random Forest** — Ensemble of 100 decision trees
+5. **XGBoost** — Gradient boosting (requires `xgboost` package)
 
-## Key Findings
+## Dataset Sources
 
-Results will be documented after running the analysis.
-
-## Dependencies
-
-- Python 3.8+
-- pandas, numpy, matplotlib, seaborn
-- scikit-learn, joblib
-- jupyter
+- **Cleveland:** [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/heart+disease) — `processed.cleveland.data`
+- **Framingham:** [Kaggle](https://www.kaggle.com/datasets/dileep070/heart-disease-prediction-using-logistic-regression) — Downloaded automatically via `kagglehub`
 
 ## License
 

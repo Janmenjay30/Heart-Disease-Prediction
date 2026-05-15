@@ -4,8 +4,8 @@ matplotlib
 seaborn
 scikit-learn
 joblib
-jupyter
 streamlit
 xgboost
 fastapi
 uvicorn
+kagglehub

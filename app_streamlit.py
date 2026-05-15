@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 from pathlib import Path
 
-MODEL_PATH = Path("models") / "best_pipeline.joblib"
+MODEL_PATH = Path("results") / "cleveland" / "models" / "best_pipeline.joblib"
 
 
 def load_model():

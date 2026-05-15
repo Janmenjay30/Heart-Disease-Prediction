@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-MODEL_PATH = PROJECT_ROOT / "models" / "best_pipeline.joblib"
+MODEL_PATH = PROJECT_ROOT / "results" / "cleveland" / "models" / "best_pipeline.joblib"
 
 app = FastAPI(title="Heart Disease Prediction API", version="1.0.0")
 

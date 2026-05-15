@@ -1,19 +1,25 @@
+# Virtual Environments
+.venv/
 venv/
+
+# Python bytecode
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# Jupyter
 .ipynb_checkpoints/
+
+# Trained model binaries (re-generate via training scripts)
 models/*.joblib
-*.log
+experiments/**/models/*.joblib
+
+# OS files
 .DS_Store
+
 # Secrets
 kaggle.json
 
-# Virtual Environments
-.venv/
-
-# Experiments & Data
-data/
-experiments/**/models/*.joblib
-
+# Logs
+*.log
