@@ -35,6 +35,13 @@ try:
 except Exception:
     XGBClassifier = None
 
+try:
+    from imblearn.pipeline import Pipeline as ImbPipeline
+    from imblearn.over_sampling import SMOTE
+except ImportError:
+    ImbPipeline = None
+    SMOTE = None
+
 
 # ---------------------------------------------------------------------------
 # 1. Preprocessor builder
@@ -124,12 +131,11 @@ def get_imbalance_info(y: pd.Series) -> dict:
 # ---------------------------------------------------------------------------
 # 4. Evaluation
 # ---------------------------------------------------------------------------
-def evaluate_model(pipeline, X_test, y_test) -> tuple:
+def evaluate_model(pipeline, X_test, y_test, threshold=0.5) -> tuple:
     """Evaluate a trained pipeline on the test set.
 
     Returns (metrics_dict, y_pred, y_proba).
     """
-    y_pred = pipeline.predict(X_test)
     y_proba = None
     try:
         y_proba = pipeline.predict_proba(X_test)[:, 1]
@@ -138,6 +144,11 @@ def evaluate_model(pipeline, X_test, y_test) -> tuple:
             y_proba = pipeline.decision_function(X_test)
         except Exception:
             y_proba = None
+
+    if y_proba is not None and hasattr(pipeline.named_steps["model"], "predict_proba"):
+        y_pred = (y_proba >= threshold).astype(int)
+    else:
+        y_pred = pipeline.predict(X_test)
 
     metrics = {
         "accuracy": float(accuracy_score(y_test, y_pred)),
@@ -282,23 +293,36 @@ def train_and_evaluate_all(
     models: dict,
     models_dir: Path,
     select_best_by: str = "recall",
+    use_smote: bool = False,
+    threshold: float = 0.5,
 ) -> tuple[dict, str, Pipeline]:
     """Train all models, evaluate, persist pipelines, and pick the best.
 
     Returns (results_dict, best_model_name, best_pipeline).
     """
+    if use_smote and ImbPipeline is None:
+        warnings.warn("imbalanced-learn is not installed. Ignoring use_smote=True.")
+        use_smote = False
+
     results = {}
     best_score = -1.0
     best_name = None
     best_pipeline = None
 
     for name, model in models.items():
-        pipeline = Pipeline([
-            ("preprocessor", preprocessor),
-            ("model", model),
-        ])
+        if use_smote:
+            pipeline = ImbPipeline([
+                ("preprocessor", preprocessor),
+                ("smote", SMOTE(random_state=42)),
+                ("model", model),
+            ])
+        else:
+            pipeline = Pipeline([
+                ("preprocessor", preprocessor),
+                ("model", model),
+            ])
         pipeline.fit(X_train, y_train)
-        metrics, y_pred, y_proba = evaluate_model(pipeline, X_test, y_test)
+        metrics, y_pred, y_proba = evaluate_model(pipeline, X_test, y_test, threshold=threshold)
         metrics["y_pred"] = y_pred
         metrics["y_proba"] = y_proba
         results[name] = metrics

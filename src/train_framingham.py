@@ -24,6 +24,11 @@ def main():
     print("[1/4] Loading Framingham dataset via Kaggle...")
     df = load_framingham()
 
+    # Drop weak/noisy features based on correlation analysis
+    weak_features = ["currentSmoker", "heartRate", "cigsPerDay", "prevalentStroke", "BMI"]
+    print(f"Dropping weak features: {weak_features}")
+    df = df.drop(columns=weak_features)
+
     # The target column is TenYearCHD
     X = df.drop(columns=["TenYearCHD"])
     y = df["TenYearCHD"]
@@ -49,8 +54,12 @@ def main():
     preprocessor = build_preprocessor(numeric_features, categorical_features)
     
     imbalance_info = get_imbalance_info(y_train)
-    use_class_weight = imbalance_info["is_imbalanced"]
-    if use_class_weight:
+    use_smote = imbalance_info["is_imbalanced"]
+    use_class_weight = False if use_smote else imbalance_info["is_imbalanced"]
+    
+    if use_smote:
+        print(f"-> Imbalance detected (ratio {imbalance_info['minority_to_majority_ratio']:.2f}). Enabling SMOTE oversampling.")
+    elif use_class_weight:
         print(f"-> Imbalance detected (ratio {imbalance_info['minority_to_majority_ratio']:.2f}). Enabling class_weight.")
 
     models = build_models(use_class_weight=use_class_weight)
@@ -66,7 +75,9 @@ def main():
         preprocessor=preprocessor,
         models=models,
         models_dir=MODELS_DIR,
-        select_best_by="f1"  # F1 is better for highly imbalanced datasets
+        select_best_by="f1",  # F1 is better for highly imbalanced datasets
+        use_smote=use_smote,
+        threshold=0.35
     )
 
     print(f"[4/4] Saving results to {RESULTS_DIR}...")
