@@ -9,3 +9,4 @@ xgboost
 fastapi
 uvicorn
 kagglehub
+imbalanced-learn

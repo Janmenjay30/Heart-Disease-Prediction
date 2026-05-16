@@ -43,7 +43,9 @@ PIPELINES = {
         "title_prefix": "Cleveland: ",
     },
     "framingham": {
-        "data_loader": load_framingham,
+        "data_loader": lambda: load_framingham().drop(
+            columns=["currentSmoker", "heartRate", "cigsPerDay", "prevalentStroke", "BMI"]
+        ),
         "target_col": "TenYearCHD",
         "models_dir": PROJECT_ROOT / "results" / "framingham" / "models",
         "results_dir": PROJECT_ROOT / "results" / "framingham",
