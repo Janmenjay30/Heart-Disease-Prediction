@@ -38,9 +38,31 @@ except Exception:
 try:
     from imblearn.pipeline import Pipeline as ImbPipeline
     from imblearn.over_sampling import SMOTE
+    from imblearn.combine import SMOTEENN, SMOTETomek
 except ImportError:
     ImbPipeline = None
     SMOTE = None
+    SMOTEENN = None
+    SMOTETomek = None
+
+try:
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Dense, Dropout, Input
+    from scikeras.wrappers import KerasClassifier
+    
+    def build_keras_model(meta):
+        model = Sequential()
+        model.add(Input(shape=(meta["n_features_in_"],)))
+        model.add(Dense(32, activation="relu"))
+        model.add(Dropout(0.2))
+        model.add(Dense(16, activation="relu"))
+        model.add(Dense(1, activation="sigmoid"))
+        model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+        return model
+except ImportError:
+    KerasClassifier = None
+
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 
 # ---------------------------------------------------------------------------
@@ -97,6 +119,17 @@ def build_models(use_class_weight: bool = False) -> dict:
         )
     else:
         warnings.warn("xgboost is not installed. Skipping XGBoost model.")
+
+    if KerasClassifier is not None:
+        # scikeras accepts class_weight="balanced"
+        class_weight_keras = "balanced" if use_class_weight else None
+        models["ANN_Keras"] = KerasClassifier(
+            model=build_keras_model, 
+            epochs=50, 
+            batch_size=32, 
+            verbose=0,
+            class_weight=class_weight_keras
+        )
 
     return models
 
@@ -294,7 +327,10 @@ def train_and_evaluate_all(
     models_dir: Path,
     select_best_by: str = "recall",
     use_smote: bool = False,
+    smote_type: str = "smote", # "smote", "smoteenn", "smotetomek"
+    smote_ratio: float = 1.0,
     threshold: float = 0.5,
+    tune_hyperparameters: bool = False,
 ) -> tuple[dict, str, Pipeline]:
     """Train all models, evaluate, persist pipelines, and pick the best.
 
@@ -311,9 +347,16 @@ def train_and_evaluate_all(
 
     for name, model in models.items():
         if use_smote:
+            if smote_type == "smoteenn":
+                sampler = SMOTEENN(sampling_strategy=smote_ratio,random_state=42)
+            elif smote_type == "smotetomek":
+                sampler = SMOTETomek(sampling_strategy=smote_ratio,random_state=42)
+            else:
+                sampler = SMOTE(sampling_strategy=smote_ratio,random_state=42)
+                
             pipeline = ImbPipeline([
                 ("preprocessor", preprocessor),
-                ("smote", SMOTE(random_state=42)),
+                ("sampler", sampler),
                 ("model", model),
             ])
         else:
@@ -321,7 +364,29 @@ def train_and_evaluate_all(
                 ("preprocessor", preprocessor),
                 ("model", model),
             ])
-        pipeline.fit(X_train, y_train)
+            
+        if tune_hyperparameters and name in ["RandomForest", "XGBoost"]:
+            print(f"  -> Tuning hyperparameters for {name}...")
+            param_grid = {}
+            if name == "RandomForest":
+                param_grid = {
+                    "model__n_estimators": [50, 100, 200],
+                    "model__max_depth": [None, 10, 20],
+                    "model__min_samples_split": [2, 5]
+                }
+            elif name == "XGBoost":
+                param_grid = {
+                    "model__n_estimators": [100, 200],
+                    "model__max_depth": [3, 4, 6],
+                    "model__learning_rate": [0.01, 0.05, 0.1],
+                    "model__scale_pos_weight": [1.0, 2.0, 5.0, 10.0]
+                }
+            search = RandomizedSearchCV(pipeline, param_grid, n_iter=5, scoring='f1', cv=3, random_state=42, n_jobs=-1)
+            search.fit(X_train, y_train)
+            pipeline = search.best_estimator_
+            print(f"     Best params for {name}: {search.best_params_}")
+        else:
+            pipeline.fit(X_train, y_train)
         metrics, y_pred, y_proba = evaluate_model(pipeline, X_test, y_test, threshold=threshold)
         metrics["y_pred"] = y_pred
         metrics["y_proba"] = y_proba

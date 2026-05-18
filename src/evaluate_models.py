@@ -43,9 +43,7 @@ PIPELINES = {
         "title_prefix": "Cleveland: ",
     },
     "framingham": {
-        "data_loader": lambda: load_framingham().drop(
-            columns=["currentSmoker", "heartRate", "cigsPerDay", "prevalentStroke", "BMI"]
-        ),
+        "data_loader": lambda: load_framingham(),
         "target_col": "TenYearCHD",
         "models_dir": PROJECT_ROOT / "results" / "framingham" / "models",
         "results_dir": PROJECT_ROOT / "results" / "framingham",
@@ -108,7 +106,8 @@ def main():
 
     for name, path in pipelines.items():
         model = joblib.load(path)
-        metrics, y_pred, y_proba = evaluate_model(model, X_test, y_test)
+        threshold = 0.35 if args.pipeline == "framingham" else 0.5
+        metrics, y_pred, y_proba = evaluate_model(model, X_test, y_test, threshold=threshold)
         metrics["y_pred"] = y_pred
         metrics["y_proba"] = y_proba
         results[name] = metrics
